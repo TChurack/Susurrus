@@ -10,6 +10,7 @@ public class ChatServer {
 	private DataInputStream input;
 	
 	final static int DEFAULT_PORT = 3636; //Port used if no port number supplied
+	final static String ADMIN = "Boss";
 	
 	//Chain constructors
 	public ChatServer() {
@@ -24,25 +25,33 @@ public class ChatServer {
 			serverSocket = new ServerSocket(portNumber);
 			System.out.println("Server now running: " + serverSocket);
 			
-			System.out.println("Waiting for client...");
-			clientSocket = serverSocket.accept();
-			System.out.println("Client found! " + clientSocket);
+			boolean killServer = false;
 			
-			input = new DataInputStream(new BufferedInputStream(clientSocket.getInputStream()));
-			
-			boolean finished = false;
-			while (!finished) {
+			while (!killServer) {
+				System.out.println("Waiting for client...");
+				clientSocket = serverSocket.accept();
+				System.out.println("Client found! " + clientSocket);
 				
-				try {
-					String message = input.readUTF();
-					System.out.println(message);
-					finished = (message.equalsIgnoreCase("exit")); 
-				} catch (IOException e) {
-					System.out.println("IOException while waiting for messages: " + e);
-					finished = true;
+				input = new DataInputStream(new BufferedInputStream(clientSocket.getInputStream()));
+				
+				boolean finished = false;
+				while (!finished) {
+					
+					try {
+						String message = input.readUTF();
+						
+						if (message.endsWith("killServer")) { killServer = authorisedToKill(message); }
+						finished = (message.endsWith("exit") || killServer); 
+						
+						if(!finished) { System.out.println(message); }
+						
+					} catch (IOException e) {
+						System.out.println("IOException while waiting for messages: " + e);
+						finished = true;
+					}
 				}
+				close();
 			}
-			close();
 		} catch (IOException e) {
 			System.out.println("Server encountered IOException: " + e);
 		}
@@ -52,6 +61,10 @@ public class ChatServer {
 	public void close() throws IOException {
 		if (clientSocket != null) { clientSocket.close(); }
 		if (input != null) { input.close(); }
+	}
+	
+	public boolean authorisedToKill(String message) {
+		return message.startsWith(ADMIN);
 	}
 	
 	public static void main(String args[]) {
