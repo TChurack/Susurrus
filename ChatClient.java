@@ -21,11 +21,18 @@ public class ChatClient {
 			System.out.println("Encountered IOException: " + e.getMessage());
 		}
 		
+		System.out.println("Please enter a username:");
+		String username = consoleIn.readLine();
+		
+		if (username.length() == 0) {
+			username =  "Anonymous";
+		}
+		
 		String message = "";
 		while(!message.equalsIgnoreCase("exit")) {
 			try {
 				message = consoleIn.readLine();
-				output.writeUTF(message);
+				output.writeUTF(username + ": " + message);
 				output.flush();
 			} catch (IOException e) {
 				System.out.println("Error while sending message: " + e.getMessage());
