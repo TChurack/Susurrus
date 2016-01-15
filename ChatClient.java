@@ -24,15 +24,18 @@ public class ChatClient {
 		System.out.println("Please enter a username:");
 		String username = consoleIn.readLine();
 		
-		if (username.length() == 0) {
-			username =  "Anonymous";
+		try {
+			output.writeUTF(username);
+			output.flush();
+		} catch (IOException e) {
+			System.out.println("Error while sending message: " + e.getMessage());
 		}
 		
 		String message = "";
 		while(!message.equalsIgnoreCase("exit")) {
 			try {
 				message = consoleIn.readLine();
-				output.writeUTF(username + ": " + message);
+				output.writeUTF(message);
 				output.flush();
 			} catch (IOException e) {
 				System.out.println("Error while sending message: " + e.getMessage());
