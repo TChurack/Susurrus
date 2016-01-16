@@ -4,6 +4,7 @@ import java.io.*;
 public class Listener implements Runnable {
 	private ChatServer server;
 	private DataInputStream input;
+	private DataOutputStream output;
 	private Socket clientSocket;
 	private boolean serverKilled = false;
 	private String username;
@@ -12,14 +13,13 @@ public class Listener implements Runnable {
 	public Listener(ChatServer cServer, Socket socket) {
 		server = cServer;
 		clientSocket = socket;
-		
-		
 	}
 	
 	public void run() {
 	
 		try {
 			input = new DataInputStream(new BufferedInputStream(clientSocket.getInputStream()));
+			output = new DataOutputStream(new BufferedOutputStream(clientSocket.getOutputStream()));
 			username = input.readUTF();
 					
 			if (username.length() == 0) { username = "Anonymous" + server.getAnonID(); }
@@ -47,6 +47,15 @@ public class Listener implements Runnable {
 		}
 	}
 	
+	public void notify(String message) {
+		try {
+			output.writeUTF(message);
+			output.flush();
+		} catch (IOException e) {
+			//Do nothing
+		}
+	}
+	
 	public String getName() {
 		return username;
 	}
@@ -55,6 +64,7 @@ public class Listener implements Runnable {
 	public void close() throws IOException {
 		finished = true;
 		if (input != null) { input.close(); }
+		if (output != null) { output.close(); }
 		if (clientSocket != null) { clientSocket.close(); }
 		server.removeClient(this);
 	}

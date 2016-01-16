@@ -19,43 +19,13 @@ public class ChatServer {
 	
 	private boolean killServer = false;
 	
-	private class MessagePrinter implements Runnable {
-		private LinkedList<String> messageQueue = new LinkedList<>();	
-		private boolean run = true;
-		
-		public void addMessage(String message, String username) {
-			messageQueue.add(username + " (" + (new SimpleDateFormat("HH:mm").format(new Date())) + "): " + message);
-		}
-		
-		public void addSystemMessage(String message) {
-			messageQueue.add(message);
-		}
-		
-		public void close() {
-			run = false;
-		}
-		
-		public void run() {
-			while(run) {
-				while (!messageQueue.isEmpty()) {
-					System.out.println(messageQueue.poll());
-				}
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					//Do nothing
-				}
-			}
-		}
-	}
-	
 	//Chain constructors
 	public ChatServer() {
 		this(DEFAULT_PORT);
 	}
 	
 	public ChatServer(int portNumber) {
-		printer = new MessagePrinter();
+		printer = new MessagePrinter(this);
 		new Thread(printer).start();
 		
 		try {
@@ -89,16 +59,20 @@ public class ChatServer {
 	}
 	
 	public void removeClient(Listener client) {
-		printer.addSystemMessage(client.getName() + " has left!");
+		printer.addMessage(client.getName() + " has left!");
 		clients.remove(client);
 	}
 	
 	public void addMessage(String message, String username) {
-		printer.addMessage(message, username);
+		printer.addMessage(username + " (" + (new SimpleDateFormat("HH:mm").format(new Date())) + "): " + message);
 	}
 	
 	public void welcome(String username) {
-		printer.addSystemMessage("Welcome " + username +"!");
+		printer.addMessage("Welcome " + username +"!");
+	}
+	
+	public LinkedList<Listener> getSubs() {
+		return clients;
 	}
 	
 	public boolean terminateServer(String username) {

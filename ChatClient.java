@@ -6,13 +6,15 @@ import java.io.*;
  */
 public class ChatClient {
 	private Socket socket;
-	private Console consoleIn;
+	private Console consoleIn = System.console();
 	private DataOutputStream output;
+	private ClientListener listener;
 	
 	public ChatClient(String serverName, int serverPort) {
 		System.out.println("Connecting to Server...");
 		try {
 			socket = new Socket(serverName, serverPort);
+			
 			System.out.println("Successfully connected!");
 			start();
 		} catch (UnknownHostException e) {
@@ -20,6 +22,9 @@ public class ChatClient {
 		} catch (IOException e) {
 			System.out.println("Encountered IOException: " + e.getMessage());
 		}
+		
+		listener= new ClientListener(this, socket);
+		new Thread(listener).start();
 		
 		System.out.println("Please enter a username:");
 		String username = consoleIn.readLine();
@@ -43,6 +48,10 @@ public class ChatClient {
 		}
 	}
 	
+	public void addMessage(String message) {
+		System.out.println(message);
+	}
+	
 	//Starts input/output
 	public void start() throws IOException {
 		consoleIn = System.console();
@@ -54,6 +63,7 @@ public class ChatClient {
 		try {
 			if (output != null) { output.close(); }
 			if (socket != null) { socket.close(); }
+			if (listener != null) { listener.close(); }
 		} catch (IOException e) {
 			System.out.println("Error severing connection to server!.."); //Synophonic pun!
 		}
